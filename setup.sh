@@ -1,7 +1,7 @@
 #!/bin/bash
 
-git clone https://github.com/howardh/tracker-backend.git
-git clone https://github.com/howardh/tracker-frontend.git
+git clone https://github.com/temporaryorgname/tracker-backend.git
+git clone https://github.com/temporaryorgname/tracker-frontend.git
 
 cd tracker-frontend
 npm install
