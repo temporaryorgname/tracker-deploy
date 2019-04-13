@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  'AWS::CloudFormation::Designer':
+    877dc69e-54d3-401f-bb2f-9a378876d8b4:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 200
+        'y': 160
+      z: 0
+      embeds: []
+      isassociatedwith:
+        - d13feebe-ecf6-4d30-953f-787ce42531a2
+    d13feebe-ecf6-4d30-953f-787ce42531a2:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 60
+        'y': 160
+      z: 0
+      embeds: []
+Resources:
+  WebServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t2.micro
+      KeyName: 'DevKeyPair'
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+            dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            cd /home/ubuntu
+            git clone https://github.com/temporaryorgname/tracker-deploy.git
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 877dc69e-54d3-401f-bb2f-9a378876d8b4
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: WebServerSecurityGroup
+      GroupDescription: "Web Server Security Group"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d13feebe-ecf6-4d30-953f-787ce42531a2
