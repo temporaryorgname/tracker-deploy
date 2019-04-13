@@ -16,10 +16,11 @@ cp ../../assets/background.jpeg images
 cd ..
 npm install
 npm run build
-cd ../tracker-backend/fitnessapp
-virtualenv ENV
+cd ../tracker-backend
+virtualenv ENV -p python3
 source ENV/bin/activate
 pip3 install -r requirements.txt
+cd fitnessapp
 mkdir -p static
 cd static
 cp -r ../../../tracker-frontend/build/* .
