@@ -1,53 +1,121 @@
 AWSTemplateFormatVersion: 2010-09-09
 Metadata:
   'AWS::CloudFormation::Designer':
-    877dc69e-54d3-401f-bb2f-9a378876d8b4:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 200
-        'y': 160
-      z: 0
-      embeds: []
-      isassociatedwith:
-        - d13feebe-ecf6-4d30-953f-787ce42531a2
     d13feebe-ecf6-4d30-953f-787ce42531a2:
       size:
         width: 60
         height: 60
       position:
-        x: 60
-        'y': 160
+        x: 110
+        'y': 150
+      z: 1
+      embeds: []
+    6ddf79a6-ef5f-4189-89e4-bed04698c371:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 210
+        'y': 250
+      z: 1
+      embeds: []
+    bae4b871-69b1-4a9a-91ef-af038a4afab1:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 210
+        'y': 150
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - d13feebe-ecf6-4d30-953f-787ce42531a2
+    744507af-6e0c-41d5-b73e-e7907de23adb:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 210
+        'y': 50
       z: 0
       embeds: []
+Parameters:
+  DBName:
+    Description: Database name
+    Default: logsdb
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+  DBUsername:
+    Description: Database username
+    Default: user0
+    Type: String
+    MinLength: 1
+    MaxLength: 64
+  DBPassword:
+    Description: Database password
+    Default: VerySecurePassword
+    Type: String
+    MinLength: 8
+    MaxLength: 64
 Resources:
   WebServer:
     Type: 'AWS::EC2::Instance'
     Properties:
       ImageId: ami-0c55b159cbfafe1f0
       InstanceType: t2.micro
-      KeyName: 'DevKeyPair'
+      KeyName: DevKeyPair
       SecurityGroupIds:
         - !Ref WebServerSecurityGroup
       UserData:
-        Fn::Base64: 
-          !Sub |
+        'Fn::Base64': !Sub 
+          - |
             #!/bin/bash
+
+            DB_ADDRESS="${DBAddress}"
+            DB_PORT="${DBPort}"
+            DB_USER="${DBUsername}"
+            DB_PASSWORD="${DBPassword}"
+            ACCOUNT_ID="${AWS::AccountId}"
+            REGION="${AWS::Region}"
+
             dd if=/dev/zero of=/swapfile bs=1024 count=1048576
             chmod 600 /swapfile
             mkswap /swapfile
             swapon /swapfile
             cd /home/ubuntu
             git clone https://github.com/temporaryorgname/tracker-deploy.git
+            cd tracker-deploy
+            ./setup.sh > /home/ubuntu/setup-log
+            mkdir tracker-backend/instance
+            touch tracker-backend/instance/config.py
+            echo "LOGS_PHOTO_BUCKET_NAME=${BucketName} LOGS_DB_URI=postgresql://${DBUsername}:${DBPassword}@${DBAddress}:${DBPort}/${DBName} ENV/bin/gunicorn -b 0.0.0.0:443 --certfile /home/ubuntu/cert.pem --keyfile /home/ubuntu/key.pem fitnessapp:app" > tracker-backend/run.sh
+            chmod +x tracker-backend/run.sh
+            
+            openssl req -x509 -newkey rsa:4096 -nodes -out /home/ubuntu/cert.pem -keyout /home/ubuntu/key.pem -days 30 -subj /C=CA > /home/ubuntu/openssl-log
+            
+          - DBAddress: !GetAtt 
+              - PGInstance
+              - Endpoint.Address
+            DBPort: !GetAtt 
+              - PGInstance
+              - Endpoint.Port
+            DBUsername:
+              !Ref DBUsername
+            DBPassword:
+              !Ref DBPassword
+            DBName:
+              !Ref DBName
+            BucketName:
+              !Ref PhotoBucket
     Metadata:
       'AWS::CloudFormation::Designer':
-        id: 877dc69e-54d3-401f-bb2f-9a378876d8b4
+        id: bae4b871-69b1-4a9a-91ef-af038a4afab1
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       GroupName: WebServerSecurityGroup
-      GroupDescription: "Web Server Security Group"
+      GroupDescription: Web server ports
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 443
@@ -64,3 +132,22 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: d13feebe-ecf6-4d30-953f-787ce42531a2
+  PGInstance:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: postgres
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBInstanceClass: db.t2.micro
+      AllocatedStorage: 5
+      BackupRetentionPeriod: 0
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 6ddf79a6-ef5f-4189-89e4-bed04698c371
+  PhotoBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 744507af-6e0c-41d5-b73e-e7907de23adb
