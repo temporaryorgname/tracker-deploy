@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  'AWS::CloudFormation::Designer':
+    d13feebe-ecf6-4d30-953f-787ce42531a2:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 110
+        'y': 150
+      z: 1
+      embeds: []
+    bae4b871-69b1-4a9a-91ef-af038a4afab1:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 210
+        'y': 150
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - d13feebe-ecf6-4d30-953f-787ce42531a2
+Parameters:
+  DBName:
+    Description: Database name
+    Default: logsdb
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+  DBUsername:
+    Description: Database username
+    Default: user0
+    Type: String
+    MinLength: 1
+    MaxLength: 64
+  DBPassword:
+    Description: Database password
+    Default: VerySecurePassword
+    Type: String
+    MinLength: 8
+    MaxLength: 64
+  GithubToken:
+    Description: Personal Access Token
+    Default: ''
+    Type: String
+Resources:
+  WebServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t2.micro
+      KeyName: DevKeyPair
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      IamInstanceProfile: '{{arn:aws:iam::793519952398:instance-profile/deploy}}'
+      UserData:
+        'Fn::Base64': !Sub 
+          - >
+            #!/bin/bash
+
+
+            DB_ADDRESS="${DBAddress}"
+
+            DB_PORT="${DBPort}"
+
+            DB_USER="${DBUsername}"
+
+            DB_PASSWORD="${DBPassword}"
+
+            ACCOUNT_ID="${AWS::AccountId}"
+
+            REGION="${AWS::Region}"
+
+            GITHUB_TOKEN="${GithubToken}"
+
+            echo $GITHUB_TOKEN > /home/ubuntu/foo
+
+            cd ~
+
+            pwd > /home/ubuntu/pwd
+
+            echo -e "[credential]\n\thelper = store" > ~/.gitconfig
+
+            echo "https://howardh:${GithubToken}@github.com" > ~/.git-credentials
+
+            git config --get credential.helper &> /home/ubuntu/output1
+
+            git config --global credential.helper store
+
+            git config --get credential.helper &> /home/ubuntu/output2
+
+            cd /home/ubuntu
+
+            git clone https://github.com/howardh/tracker-data.git &> /home/ubuntu/clone-log
+
+            git config --list --show-origin --includes &> /home/ubuntu/conf
+
+            dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+
+            chmod 600 /swapfile
+
+            mkswap /swapfile
+
+            swapon /swapfile
+
+            cd /home/ubuntu
+          - DBAddress: asdf
+            DBPort: asdf
+            DBUsername: !Ref DBUsername
+            DBPassword: !Ref DBPassword
+            DBName: !Ref DBName
+            BucketName: asdf
+            GithubToken: !Ref GithubToken
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: bae4b871-69b1-4a9a-91ef-af038a4afab1
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: WebServerSecurityGroup
+      GroupDescription: Web server ports
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d13feebe-ecf6-4d30-953f-787ce42531a2
