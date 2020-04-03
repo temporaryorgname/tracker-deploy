@@ -29,7 +29,7 @@ npm run build
 cd ../tracker-backend
 virtualenv ENV -p python3
 source ENV/bin/activate
-pip3 install .
+pip install .
 cd fitnessapp
 mkdir -p static
 cd static
