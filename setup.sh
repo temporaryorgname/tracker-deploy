@@ -14,7 +14,7 @@ cd ..
 
 # Install required packages
 apt-get update
-DEBIAN_FRONTEND=noninteractive && apt-get -q --option \"Dpkg::Options::=--force-confold\" --assume-yes install libssl1.1
+DEBIAN_FRONTEND=noninteractive apt-get -q --option \"Dpkg::Options::=--force-confold\" --assume-yes install libssl1.1
 apt-get --assume-yes install npm python3 virtualenv
 
 # Setup repo
