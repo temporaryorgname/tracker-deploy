@@ -1,8 +1,82 @@
 # Deployment
 
-Run from the `tracker-backend` directory:
-`LOGS_PHOTO_BUCKET_NAME=<BUCKET_NAME_HERE> LOGS_DB_URI=postgresql://<USERNAME>:<PASSWORD>@<DB_ADDRESS>:<DB_PORT>/<DB_NAME> ENV/bin/gunicorn -b 0.0.0.0:443 --certfile <DIRECTORY_TO_CERT_FILE>/fullchain.pem --keyfile <DIRECTORY_TO_KEY_FILE>/privkey.pem fitnessapp:app`
+## uWSGISetup
 
-# AWS Dev Setup
+Install packages
+```
+sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools
+```
 
-Create Key Pair: EC2 -> Network & Security -> Key Pairs -> Create Key Pair -> Make a key pair called 'DevKeyPair'
+Install `uwsgi`:
+```
+pip install uwsgi
+```
+
+Create `/etc/systemd/system/tracker.service`:
+```
+[Unit]
+Description=uWSGI instance to serve tracker project
+After=network.target
+
+[Service]
+User=howardh
+Group=www-data
+WorkingDirectory=/home/howardh/tracker-deploy/tracker-backend
+Environment="PATH=/home/howardh/tracker-deploy/tracker-backend/ENV/bin"
+ExecStart=/home/howardh/tracker-deploy/tracker-backend/ENV/bin/uwsgi --ini app.ini
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the service and tell it to start on boot:
+```
+sudo systemctl start tracker
+sudo systemctl enable tracker
+```
+
+# Nginx
+
+Install
+```
+sudo apt-get install nginx
+```
+
+Create `/etc/nginx/sites-available/tracker`
+```
+server {
+    listen 80;
+    server_name your_domain logs.hhixl.net;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/home/howardh/tracker-deploy/tracker-backend/app.sock;
+    }
+}
+```
+
+Enable site
+```
+sudo ln -s /etc/nginx/sites-available/tracker /etc/nginx/sites-enabled
+```
+
+Restart nginx
+```
+sudo systemctl restart nginx
+```
+
+## SSL
+
+```
+sudo apt install python-certbot-nginx
+sudo certbot --nginx -d logs.hhixl.net --force-renewal
+```
+
+## Troubleshooting
+
+```
+sudo less /var/log/nginx/error.log
+sudo less /var/log/nginx/access.log
+sudo journalctl -u nginx
+sudo journalctl -u tracker
+```
