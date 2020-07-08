@@ -1,5 +1,13 @@
 # Deployment
 
+## Config
+
+Create `./tracker-backend/instance/config.py`:
+```
+UPLOAD_FOLDER = '/path/for/temporary/uploaded/files'
+SQLALCHEMY_DATABASE_URI='postgresql://<user>:<pass>@<address>/<dbname>'
+```
+
 ## uWSGISetup
 
 Install packages
