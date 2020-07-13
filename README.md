@@ -68,6 +68,12 @@ Enable site
 sudo ln -s /etc/nginx/sites-available/tracker /etc/nginx/sites-enabled
 ```
 
+Increase max http body size so that photos can be uploaded.
+Edit `/etc/nginx/nginx.conf` to add the following line under the http section:
+```
+client_max_body_size 5M;
+```
+
 Restart nginx
 ```
 sudo systemctl restart nginx
